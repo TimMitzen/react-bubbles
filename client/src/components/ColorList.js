@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { authWithAxios } from "../utils/authWithAxios";
 
 const initialColor = {
   color: "",
@@ -10,6 +11,7 @@ const ColorList = ({ colors, updateColors }) => {
   console.log(colors);
   const [editing, setEditing] = useState(false);
   const [colorToEdit, setColorToEdit] = useState(initialColor);
+  const [colorToAdd, setColorToAdd] = useState(initialColor);
 
   const editColor = color => {
     setEditing(true);
@@ -18,14 +20,33 @@ const ColorList = ({ colors, updateColors }) => {
 
   const saveEdit = e => {
     e.preventDefault();
+    authWithAxios()
+    .put(`/colors/${colorToEdit.id}`,colorToEdit)
+    .then(response=>{
+      setEditing(false);
+      
+    })
+    .catch(error=>console.log('ERROR',error))
     // Make a put request to save your updated color
     // think about where will you get the id from...
     // where is is saved right now?
   };
 
   const deleteColor = color => {
-    // make a delete request to delete this color
+    authWithAxios()
+    .delete(`/colors/${color.id}`, color)
+    .then(response=>{
+      setEditing(false)
+
+    })
+    .catch(error=>console.log('Error',error))
   };
+  const addColor = (event) => {
+    authWithAxios()
+    .post(`colors`, colorToAdd)
+    .then(response=>updateColors([...colors, colorToAdd]))
+    .catch()
+  }
 
   return (
     <div className="colors-wrap">
@@ -82,6 +103,22 @@ const ColorList = ({ colors, updateColors }) => {
       )}
       <div className="spacer" />
       {/* stretch - build another form here to add a color */}
+      <form onSubmit={addColor}>
+        <label htmlFor='add'>
+          Add Color
+        <input type='text' name='addcolor' value={colorToAdd.color} onChange={event=>setColorToAdd({
+          ...colorToAdd, color: event.target.value
+        })}/>
+        </label>
+        <label htmlFor="hex">
+        Add Hex
+        <input type='text' name='addhex' onChange={event=>setColorToAdd({...colorToAdd, code: {hex: event.target.value } 
+        })} value={colorToAdd.code.hex}  />
+        </label>
+        <button type='submit'>Add</button>
+
+      </form>
+
     </div>
   );
 };
